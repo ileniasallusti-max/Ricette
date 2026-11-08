@@ -527,8 +527,8 @@ function showEditor(id){
   const r=id?S.recipes.find(x=>x.id===id):null;
   const startCat=curFolder&&curFolder!=="sgarro"?curFolder:"pranzo";
   draft=r?JSON.parse(JSON.stringify(r)):{id:"r"+Date.now(),cat:startCat,sgarro:curFolder==="sgarro",title:"",kcal:"",time:"",ingredients:[],steps:[],photo:""};
-  const ingRow=v=>`<div class="ingrow"><span class="dot"></span><input type="text" class="ingIn" value="${esc(v)}" placeholder="Es. 120 g petto di pollo"><button type="button" data-rm aria-label="Togli"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`;
-  const ings=draft.ingredients.length?draft.ingredients:["","",""];
+  const ingRow=v=>`<div class="ingrow"><span class="dot"></span><input type="text" class="ingIn" value="${esc(v)}" placeholder="Es. 120 g petto di pollo, oppure incolla una lista"><button type="button" data-rm aria-label="Togli"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`;
+  const ings=draft.ingredients.length?draft.ingredients:[""];
   openPage(`<div class="hdr">${back("p2")}<h2>${r?"Modifica ricetta":"Nuova ricetta"}</h2></div>
    <form class="form" id="ed">
     <label class="photo-pick" id="pp">${draft.photo?`<img src="${draft.photo}" alt="">`:`<span>${BIG("pranzo",36)}<br><b>Aggiungi una foto</b><br><small>Tocca per scegliere dalla galleria</small></span>`}<input type="file" accept="image/*" id="photoIn"></label>
@@ -537,7 +537,7 @@ function showEditor(id){
     <button type="button" class="switch ${draft.sgarro?"on":""}" id="sgSw"><span class="sw"></span><span>Sgarro leggero del weekend<small>Attivalo solo se vuoi metterla anche nella cartella sgarro</small></span></button>
     <div class="two"><label class="f">Porzioni<input type="number" inputmode="numeric" id="fServ" value="${draft.servings||1}" min="1"></label>
       <label class="f">Minuti<input type="number" inputmode="numeric" id="fTime" value="${draft.time||""}" placeholder="20"></label></div>
-    <div class="f">Ingredienti <span class="hint">Uno per riga, con le quantità: le kcal si calcolano da sole</span>
+    <div class="f">Ingredienti <span class="hint">Scrivili o incolla una lista intera con i pallini: li separo io</span>
       <div class="ingrows" id="ingRows">${ings.map(ingRow).join("")}</div>
       <button type="button" class="addrow" id="addIng">+ Aggiungi ingrediente</button></div>
     <div class="f">Kcal a porzione<div id="kcalArea"></div></div>
@@ -587,6 +587,19 @@ function showEditor(id){
   $("#sgSw").addEventListener("click",()=>{draft.sgarro=!draft.sgarro;$("#sgSw").classList.toggle("on",draft.sgarro);upd()});
   $("#addIng").addEventListener("click",()=>{$("#ingRows").insertAdjacentHTML("beforeend",ingRow(""));const all=$("#ingRows").querySelectorAll("input");all[all.length-1].focus()});
   $("#ingRows").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(b){b.parentElement.remove();schedule()}});
+  const BUL=/[•·●▪◦‣■☐]/;
+  const splitIngs=t=>t.replace(/\r/g,"").split(/\n|[•·●▪◦‣■☐]\s*/)
+    .map(l=>l.replace(/^\s*(?:\p{Extended_Pictographic}\uFE0F?|[-–—*+✓✔]|\d+[.)](?=\s))\s*/u,"").trim())
+    .filter(l=>l&&!/^ingredienti\b[^a-z0-9]*$/i.test(l));
+  const fillFrom=(inp,parts)=>{const row=inp.closest(".ingrow");inp.value=parts[0]||"";let after=row;
+    parts.slice(1).forEach(v=>{after.insertAdjacentHTML("afterend",ingRow(v));after=after.nextElementSibling});
+    schedule(); if(parts.length>1) toast(parts.length+" ingredienti separati")};
+  $("#ingRows").addEventListener("paste",e=>{const inp=e.target.closest&&e.target.closest(".ingIn");if(!inp)return;
+    const t=(e.clipboardData||window.clipboardData)?.getData("text")||"";const parts=splitIngs(t);
+    if(parts.length<2&&!BUL.test(t))return; e.preventDefault();
+    if(inp.value.trim()) parts.unshift(inp.value.trim()); fillFrom(inp,parts)});
+  $("#ingRows").addEventListener("input",e=>{const inp=e.target;if(!inp.classList||!inp.classList.contains("ingIn"))return;
+    if(BUL.test(inp.value)){const parts=splitIngs(inp.value);if(parts.length>1)fillFrom(inp,parts);else inp.value=parts[0]||""}});
   $("#ingRows").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList.contains("ingIn")){e.preventDefault();$("#addIng").click()}});
   $("#photoIn").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;resize(f,src=>{draft.photo=src;const pp=$("#pp");pp.querySelector("img,span")?.remove();pp.insertAdjacentHTML("afterbegin",`<img src="${src}" alt="">`)})});
   $("#ed").addEventListener("submit",async e=>{e.preventDefault();
