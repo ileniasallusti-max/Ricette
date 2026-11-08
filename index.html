@@ -176,6 +176,17 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .photo-pick img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .photo-pick input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kc-empty{background:var(--soft);border-radius:16px;padding:14px;color:var(--muted);font-weight:500;font-size:14px}
+.kc-wait{background:var(--t1);border-radius:16px;padding:14px;color:var(--accent-ink);font-weight:600;font-size:14px;display:flex;align-items:center;gap:10px}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--t2);border-top-color:var(--orange);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.kc-row{display:flex;gap:18px;flex-wrap:wrap}
+.kc-det{background:var(--soft);border-radius:16px;padding:12px 14px;margin-top:10px;font-weight:500;font-size:14px}
+.kc-det summary{cursor:pointer;font-weight:700;color:var(--accent-ink)}
+.kc-det ul{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.kc-det li{display:flex;justify-content:space-between;gap:10px}
+.kc-det li span{min-width:0}
+.kc-det p{margin:10px 0 0;color:var(--muted)}
 
 /* archivio */
 .todaybox{background:var(--orange);color:#fff;border-radius:28px;padding:20px;display:grid;gap:12px;position:relative;overflow:hidden;isolation:isolate}
@@ -381,10 +392,10 @@ function showRecipe(id){
     <button class="icon-btn" data-edit="${r.id}" aria-label="Modifica"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20h4L19 9l-4-4L4 16Z"/></svg></button></div>
     <div class="photo">${ph(r)}</div>
     <h1 class="d-title">${esc(r.title)}</h1>
-    <div class="d-meta">${r.time?`<span class="pill">${r.time} min</span>`:""}<span class="pill">${r.ingredients.length} ingredienti</span>${r.sgarro?'<span class="pill">Sgarro leggero</span>':""}</div>
+    <div class="d-meta">${r.time?`<span class="pill">${r.time} min</span>`:""}<span class="pill">${r.ingredients.length} ingredienti</span>${(r.servings||1)>1?`<span class="pill">${r.servings} porzioni</span>`:""}${r.sgarro?'<span class="pill">Sgarro leggero</span>':""}</div>
     ${ev?`<div class="kcalbox k-${ev.cls}"><div class="k num">${r.kcal}<small> kcal</small></div><div><b>${ev.label}</b><p>${ev.text}</p></div></div>`:""}
     <div class="block"><h3>Ingredienti <small id="ingCount">0 / ${r.ingredients.length}</small></h3>
-      <ul class="checks" id="ingList">${r.ingredients.map(i=>`<li><span class="tick">${TICK}</span><span>${esc(i)}</span></li>`).join("")}</ul></div>
+      <ul class="checks" id="ingList">${r.ingredients.map((i,n)=>`<li><span class="tick">${TICK}</span><span style="flex:1;min-width:0">${esc(i)}</span>${r.kcalSig&&r.kcalDetail?.[n]?`<small class="num" style="color:var(--muted);font-weight:600">${r.kcalDetail[n].kcal} kcal</small>`:""}</li>`).join("")}</ul></div>
     <div class="block"><h3>Procedimento</h3><ol class="steps">${r.steps.map(s=>`<li><span>${esc(s)}</span></li>`).join("")}</ol></div>
     <div class="actions"><button class="btn primary wide" data-eat="${r.id}">Ho mangiato questa oggi</button><button class="btn" data-edit="${r.id}">Modifica</button></div>`,"p2");
   $("#ingList").addEventListener("click",e=>{const li=e.target.closest("li");if(!li)return;li.classList.toggle("done");$("#ingCount").textContent=$("#ingList").querySelectorAll(".done").length+" / "+r.ingredients.length});
@@ -403,26 +414,66 @@ function showEditor(id){
     <label class="f">Nome della ricetta<input type="text" id="fTitle" value="${esc(draft.title)}" placeholder="Es. Insalata di farro e ceci"></label>
     <div class="f">Cartella<div class="seg" id="seg">${CATS.map(c=>`<button type="button" data-cat="${c.id}" class="${draft.cat===c.id?"on":""}">${c.name}</button>`).join("")}</div></div>
     <button type="button" class="switch ${draft.sgarro?"on":""}" id="sgSw"><span class="sw"></span><span>Sgarro leggero del weekend<small>Attivalo solo se vuoi metterla anche nella cartella sgarro</small></span></button>
-    <div class="two"><label class="f">Kcal a porzione<input type="number" inputmode="numeric" id="fKcal" value="${draft.kcal}" placeholder="420"></label>
+    <div class="two"><label class="f">Porzioni<input type="number" inputmode="numeric" id="fServ" value="${draft.servings||1}" min="1"></label>
       <label class="f">Minuti<input type="number" inputmode="numeric" id="fTime" value="${draft.time||""}" placeholder="20"></label></div>
-    <div id="evBox"></div>
-    <div class="f">Ingredienti <span class="hint">Uno per riga: nella ricetta potrai spuntarli</span>
+    <div class="f">Ingredienti <span class="hint">Uno per riga, con le quantità: le kcal si calcolano da sole</span>
       <div class="ingrows" id="ingRows">${ings.map(ingRow).join("")}</div>
       <button type="button" class="addrow" id="addIng">+ Aggiungi ingrediente</button></div>
+    <div class="f">Kcal a porzione<div id="kcalArea"></div></div>
     <label class="f">Procedimento <span class="hint">Un passaggio per riga</span><textarea id="fSteps" placeholder="Cuoci la quinoa per 12 minuti&#10;Griglia il pollo">${esc(draft.steps.join("\n"))}</textarea></label>
     <div class="actions"><button class="btn primary wide" type="submit">Salva ricetta</button>${r?`<button class="btn danger" type="button" data-del="${r.id}">Elimina</button>`:""}</div>
    </form>`,"p2");
-  const upd=()=>{const k=+$("#fKcal").value;const ev=evaluate(k,draft.cat,draft.sgarro);$("#evBox").innerHTML=ev?`<div class="kcalbox k-${ev.cls}" style="margin:0"><div class="k num">${k}<small> kcal</small></div><div><b>${ev.label}</b><p>${ev.text}</p></div></div>`:""};
-  upd(); $("#fKcal").addEventListener("input",upd);
+  if(r&&r.kcal&&!r.kcalSig) draft.kcalManual=true;
+  const curIngs=()=>[...document.querySelectorAll(".ingIn")].map(i=>i.value.trim()).filter(Boolean);
+  const servs=()=>Math.max(1,+$("#fServ").value||1);
+  const sig=()=>JSON.stringify(curIngs());
+  let busy=false,timer=null,err="";
+  const evHtml=k=>{const ev=evaluate(k,draft.cat,draft.sgarro);return ev?`<div class="kcalbox k-${ev.cls}" style="margin:0"><div class="k num">${k}<small> kcal</small></div><div><b>${ev.label}</b><p>${ev.text}</p></div></div>`:""};
+  const upd=()=>{
+    const A=$("#kcalArea"); if(!A) return;
+    if(busy){A.innerHTML=`<div class="kc-wait"><span class="spin"></span>Calcolo le kcal degli ingredienti…</div>`;return}
+    if(draft.kcalManual){
+      if(!$("#fKcal")) A.innerHTML=`<input type="number" inputmode="numeric" id="fKcal" value="${draft.kcal||""}" placeholder="420"><div id="evBox" style="margin-top:10px"></div><div class="kc-row"><button type="button" class="addrow" id="autoK">Calcola in automatico</button></div>`;
+      $("#evBox").innerHTML=evHtml(draft.kcal);return}
+    if(!curIngs().length){A.innerHTML=`<div class="kc-empty">Scrivi gli ingredienti con le quantità e le kcal compaiono qui.</div>`;return}
+    if(err){A.innerHTML=`<div class="kc-empty">${esc(err)}</div><div class="kc-row"><button type="button" class="addrow" id="reK">Riprova</button><button type="button" class="addrow" id="manK">Scrivile a mano</button></div>`;return}
+    if(draft.kcalSig!==sig()){A.innerHTML=`<div class="kc-empty">Calcolo appena finisci di scrivere…</div>`;return}
+    draft.kcal=Math.round((draft.kcalTotal||0)/servs());
+    A.innerHTML=`${evHtml(draft.kcal)}<details class="kc-det"><summary>Dettaglio per ingrediente</summary><ul>${(draft.kcalDetail||[]).map(x=>`<li><span>${esc(x.ingredient)}</span><b class="num">${x.kcal}</b></li>`).join("")}</ul><p>Totale ricetta <b class="num">${draft.kcalTotal}</b> kcal · ${servs()} porzion${servs()===1?"e":"i"}</p></details>
+      <div class="kc-row"><button type="button" class="addrow" id="reK">Ricalcola</button><button type="button" class="addrow" id="manK">Scrivile a mano</button></div>`;
+  };
+  async function calc(){
+    const ings=curIngs(); if(!ings.length){upd();return}
+    const s=sig(); busy=true; err=""; upd();
+    try{
+      const res=await fetch("/.netlify/functions/kcal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:$("#fTitle").value,ingredients:ings})});
+      const j=await res.json().catch(()=>({}));
+      if(!res.ok||!Array.isArray(j.items)) throw new Error(j.error||"");
+      draft.kcalDetail=j.items; draft.kcalTotal=j.total; draft.kcalSig=s;
+    }catch(e){err=(e.message&&!/fetch|load/i.test(e.message))?e.message:"Non riesco a calcolare le kcal adesso. Il calcolo funziona sul sito pubblicato su Netlify."}
+    busy=false; upd();
+  }
+  const schedule=()=>{if(draft.kcalManual)return;err="";clearTimeout(timer);upd();timer=setTimeout(()=>{if(sig()!==draft.kcalSig)calc()},1500)};
+  upd();
+  $("#ingRows").addEventListener("input",schedule);
+  $("#fServ").addEventListener("input",upd);
+  $("#kcalArea").addEventListener("click",e=>{const id=e.target.id;
+    if(id==="reK"){draft.kcalSig="";calc()}
+    else if(id==="manK"){draft.kcalManual=true;upd();$("#fKcal")?.focus()}
+    else if(id==="autoK"){draft.kcalManual=false;draft.kcalSig="";$("#kcalArea").innerHTML="";calc()}});
+  $("#kcalArea").addEventListener("input",e=>{if(e.target.id==="fKcal"){draft.kcal=+e.target.value||0;$("#evBox").innerHTML=evHtml(draft.kcal)}});
   $("#seg").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(!b)return;draft.cat=b.dataset.cat;$("#seg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));upd()});
   $("#sgSw").addEventListener("click",()=>{draft.sgarro=!draft.sgarro;$("#sgSw").classList.toggle("on",draft.sgarro);upd()});
   $("#addIng").addEventListener("click",()=>{$("#ingRows").insertAdjacentHTML("beforeend",ingRow(""));const all=$("#ingRows").querySelectorAll("input");all[all.length-1].focus()});
-  $("#ingRows").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(b)b.parentElement.remove()});
+  $("#ingRows").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(b){b.parentElement.remove();schedule()}});
   $("#ingRows").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList.contains("ingIn")){e.preventDefault();$("#addIng").click()}});
   $("#photoIn").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;resize(f,src=>{draft.photo=src;const pp=$("#pp");pp.querySelector("img,span")?.remove();pp.insertAdjacentHTML("afterbegin",`<img src="${src}" alt="">`)})});
-  $("#ed").addEventListener("submit",e=>{e.preventDefault();
-    draft.title=$("#fTitle").value.trim()||"Ricetta senza nome";draft.kcal=+$("#fKcal").value||0;draft.time=+$("#fTime").value||0;
-    draft.ingredients=[...document.querySelectorAll(".ingIn")].map(i=>i.value.trim()).filter(Boolean);
+  $("#ed").addEventListener("submit",async e=>{e.preventDefault();
+    if(busy) return;
+    if(!draft.kcalManual&&curIngs().length&&sig()!==draft.kcalSig){clearTimeout(timer);await calc()}
+    if(!draft.kcalManual) draft.kcal=draft.kcalSig===sig()?Math.round((draft.kcalTotal||0)/servs()):0;
+    draft.title=$("#fTitle").value.trim()||"Ricetta senza nome";draft.time=+$("#fTime").value||0;draft.servings=servs();
+    draft.ingredients=curIngs();
     draft.steps=$("#fSteps").value.split("\n").map(s=>s.trim()).filter(Boolean);
     delete draft.example;
     const i=S.recipes.findIndex(x=>x.id===draft.id); if(i>=0)S.recipes[i]=draft; else S.recipes.unshift(draft);
