@@ -14,23 +14,34 @@ export default async (req) => {
   const ingredients = (body.ingredients || []).filter(s => typeof s === "string" && s.trim()).slice(0, 40);
   if (!ingredients.length) return Response.json({ error: "Nessun ingrediente." }, { status: 400 });
 
-  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.1,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYS },
-        { role: "user", content: JSON.stringify({ ricetta: body.title || "", ingredienti: ingredients }) }
-      ]
-    })
-  });
-  if (!r.ok) return Response.json({ error: `Il servizio delle kcal non risponde (${r.status}). Riprova tra poco.` }, { status: 502 });
-  let out;
-  try { out = JSON.parse((await r.json()).choices[0].message.content); }
-  catch { return Response.json({ error: "Risposta non leggibile, riprova." }, { status: 502 }); }
+  // Prova più modelli: se uno viene ritirato da Groq si passa al successivo
+  const MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+  let out = null, lastStatus = 0;
+  for (const model of MODELS) {
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        temperature: 0.1,
+        messages: [
+          { role: "system", content: SYS },
+          { role: "user", content: JSON.stringify({ ricetta: body.title || "", ingredienti: ingredients }) }
+        ]
+      })
+    });
+    if (!r.ok) { lastStatus = r.status; if (r.status === 401) break; continue; }
+    try {
+      const text = (await r.json()).choices[0].message.content || "";
+      out = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+      break;
+    } catch { lastStatus = 502; }
+  }
+  if (!out) {
+    const msg = lastStatus === 401 ? "La chiave Groq non è valida: controlla GROQ_API_KEY su Netlify."
+      : `Il servizio delle kcal non risponde (${lastStatus}). Riprova tra poco.`;
+    return Response.json({ error: msg }, { status: 502 });
+  }
   const items = (out.items || []).map((x, i) => ({
     ingredient: String(x.ingredient || ingredients[i] || ""),
     kcal: Math.max(0, Math.round(Number(x.kcal) || 0))
