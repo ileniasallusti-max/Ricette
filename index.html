@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ricette">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#F5F4F1">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -19,9 +19,10 @@
 <style>
 /* Layout: hero arancione con doodle di cibo + saluto per profilo; cartelle a forma di cartellina vera; ricette in griglia foto */
 :root{
-  --bg:#FFFFFF; --soft:#FFF5EE; --line:#F3E3D6; --ink:#24190F; --muted:#8E7C6F;
-  --orange:#FF6A13; --orange-deep:#E9550A; --accent:#F39A62; --accent-ink:#C8571B;
-  --t1:#FFE9D8; --t2:#FFDCC4; --t3:#FFF1E6; --t4:#FFD1B0;
+  --bg:#F5F4F1; --soft:#FFFFFF; --line:#EAE6E1; --ink:#1A1714; --muted:#8A8079;
+  --tint:#FFF1E7; --hero:#1E1A17; --shadow:0 1px 2px rgba(26,23,20,.04),0 8px 20px -6px rgba(26,23,20,.07);
+  --orange:#FF6A13; --orange-deep:#E9550A; --accent:#FF6A13; --accent-ink:#D9560C;
+  --t1:#FFFFFF; --t2:#FFFFFF; --t3:#FFFFFF; --t4:#FFFFFF;
   --good:#1F9D62; --warn:#C98200; --bad:#D9443A;
   --good-bg:#EAF7EF; --warn-bg:#FFF5DE; --bad-bg:#FDEDEB;
   --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
@@ -29,15 +30,17 @@
   --r:22px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#14100D; --soft:#211913; --line:#34281F; --ink:#F8EEE5; --muted:#AA988B;
-  --orange:#FF7323; --orange-deep:#E25A12; --accent:#E58A55; --accent-ink:#F5A673;
-  --t1:#2B1E15; --t2:#33231A; --t3:#251B14; --t4:#3B271B;
+  --bg:#0F0E0D; --soft:#1A1816; --line:#2B2723; --ink:#F4F0EB; --muted:#9C928A;
+  --tint:#2B1D13; --hero:#24201C; --shadow:none;
+  --orange:#FF7323; --orange-deep:#E25A12; --accent:#FF7323; --accent-ink:#FF9A5C;
+  --t1:#1A1816; --t2:#1A1816; --t3:#1A1816; --t4:#1A1816;
   --good:#4CCB8A; --warn:#F2B33D; --bad:#F06A5F;
   --good-bg:#16291F; --warn-bg:#2E2412; --bad-bg:#311715; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#14100D; --soft:#211913; --line:#34281F; --ink:#F8EEE5; --muted:#AA988B;
-  --orange:#FF7323; --orange-deep:#E25A12; --accent:#E58A55; --accent-ink:#F5A673;
-  --t1:#2B1E15; --t2:#33231A; --t3:#251B14; --t4:#3B271B;
+  --bg:#0F0E0D; --soft:#1A1816; --line:#2B2723; --ink:#F4F0EB; --muted:#9C928A;
+  --tint:#2B1D13; --hero:#24201C; --shadow:none;
+  --orange:#FF7323; --orange-deep:#E25A12; --accent:#FF7323; --accent-ink:#FF9A5C;
+  --t1:#1A1816; --t2:#1A1816; --t3:#1A1816; --t4:#1A1816;
   --good:#4CCB8A; --warn:#F2B33D; --bad:#F06A5F;
   --good-bg:#16291F; --warn-bg:#2E2412; --bad-bg:#311715; color-scheme:dark}
 *{box-sizing:border-box}
@@ -70,17 +73,73 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .sec span{color:var(--muted);font-size:13px;font-weight:600}
 
 /* cartelle con striscia arancione */
-.folders{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.folder{border-radius:24px;padding:16px 16px 16px 26px;text-align:left;display:grid;gap:18px;min-height:150px;align-content:space-between;transition:transform .15s;position:relative;overflow:hidden}
-.folder::before{content:"";position:absolute;left:0;top:0;bottom:0;width:9px;background:var(--orange)}
+.folders{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.folder{border-radius:20px;padding:12px 10px 12px 18px;text-align:left;display:grid;gap:10px;align-content:space-between;transition:transform .15s;position:relative;overflow:hidden;min-width:0}
+.folder::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--orange)}
 .folder:active{transform:scale(.97)}
-.folder .ic{width:44px;height:44px;border-radius:14px;background:var(--bg);display:grid;place-items:center;color:var(--orange)}
-.folder b{font-family:var(--display);font-size:19px;font-weight:800;line-height:1.1;display:block}
-.folder .count{font-size:13px;color:var(--muted);font-weight:600;margin-top:3px;display:block}
-.folder .n{position:absolute;right:16px;top:12px;font-family:var(--display);font-size:38px;font-weight:800;color:var(--orange);opacity:.8;line-height:1}
+.folder .ic{width:34px;height:34px;border-radius:11px;background:var(--bg);display:grid;place-items:center;color:var(--orange)}
+.folder .ic svg{width:19px;height:19px}
+.folder b{font-family:var(--display);font-size:15px;font-weight:800;line-height:1.1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.folder .count{font-size:12px;color:var(--muted);font-weight:600;margin-top:1px;display:block}
+.folder .n{position:absolute;right:10px;top:9px;font-family:var(--display);font-size:24px;font-weight:800;color:var(--orange);opacity:.85;line-height:1}
 .f-colazione{background:var(--t1)} .f-pranzo{background:var(--t2)} .f-cena{background:var(--t1)} .f-snack{background:var(--t3)}
-.f-sgarro{grid-column:1/-1;min-height:0;grid-template-columns:auto 1fr;align-items:center;gap:14px;background:var(--t4)}
+.f-sgarro{grid-column:span 2;grid-template-columns:auto 1fr;align-items:center;gap:10px;background:var(--t4)}
 .f-sgarro .n{top:50%;transform:translateY(-50%)}
+
+/* allenamenti */
+.wk-days{display:grid;gap:8px}
+.wk-day{display:grid;grid-template-columns:50px 1fr auto 16px;gap:12px;align-items:center;padding:9px 14px 9px 9px;border-radius:18px;background:var(--soft);text-align:left;position:relative;overflow:hidden;width:100%}
+.wk-day:active{transform:scale(.98)}
+.wk-d{width:50px;height:50px;border-radius:14px;background:var(--bg);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:14px;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.03em}
+.wk-day.today{background:var(--t1)}
+.wk-day.today::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--orange)}
+.wk-day.today .wk-d{background:var(--orange);color:#fff}
+.wk-info{min-width:0;display:grid}
+.wk-info b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-info small{color:var(--muted);font-size:13px}
+.wk-day.rest .wk-info b{color:var(--muted);font-weight:600}
+.wk-tag{font-size:12px;font-weight:700;background:var(--orange);color:#fff;border-radius:99px;padding:3px 10px}
+.wk-tag.ok{background:var(--good-bg);color:var(--good)}
+.wk-day > svg{color:var(--muted)}
+.f-head input.wk-title{font:inherit;font-family:var(--display);font-size:26px;font-weight:800;border:0;background:transparent;color:var(--ink);padding:0;width:100%;letter-spacing:-.02em;border-radius:0}
+.f-head > div{min-width:0;flex:1}
+.exlist{display:grid;gap:10px}
+.ex{display:grid;grid-template-columns:28px 1fr 32px;gap:10px;align-items:start;background:var(--soft);border-radius:20px;padding:12px 8px 14px 14px}
+.ex-chk{width:28px;height:28px;border-radius:9px;border:2px solid var(--accent);display:grid;place-items:center;margin-top:6px}
+.ex-chk svg{opacity:0}
+.ex.done .ex-chk{background:var(--orange);border-color:var(--orange)}
+.ex.done .ex-chk svg{opacity:1}
+.ex-main{min-width:0;display:grid;gap:8px}
+.ex input.ex-name{font:inherit;font-weight:700;font-size:16px;border:0;background:transparent;color:var(--ink);padding:6px 0;width:100%;border-radius:0}
+.ex.done input.ex-name{text-decoration:line-through;color:var(--muted)}
+.ex-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ex-nums label{display:grid;gap:4px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center}
+.ex .ex-nums input{background:var(--bg);padding:10px 6px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;border-radius:12px}
+.ex-main small.ex-last{font-size:12.5px;color:var(--accent-ink);font-weight:600;text-transform:none;letter-spacing:0}
+.ex-rm{width:32px;height:32px;border-radius:50%;color:var(--muted);display:grid;place-items:center}
+.add-ex{width:100%;border:2px dashed var(--accent);border-radius:20px;padding:14px;color:var(--accent-ink);font-weight:700;margin-top:10px}
+.hint-s{font-size:13px;color:var(--muted);text-align:center;margin:12px 8px 0}
+.arch-seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:16px;padding:4px;margin-bottom:14px}
+.arch-seg button{padding:10px;border-radius:12px;font-weight:700;color:var(--muted)}
+.arch-seg button.on{background:var(--bg);color:var(--orange);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.wkbox{background:var(--orange);color:#fff;border-radius:28px;padding:20px;display:grid;gap:14px}
+.wkbox h3{font-size:22px;font-weight:800}
+.wkbox .eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.9}
+.strip7{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.strip7 div{display:grid;justify-items:center;gap:5px;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.95}
+.strip7 i{width:100%;max-width:38px;aspect-ratio:1;border-radius:11px;background:rgba(255,255,255,.22);display:grid;place-items:center}
+.strip7 i.on{background:#fff;color:var(--orange)}
+.wtable{width:100%;border-collapse:collapse;font-size:14px}
+.wtable td{padding:8px 0;border-top:1px solid var(--line);vertical-align:top}
+.wtable td:nth-child(2),.wtable td:nth-child(3){text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-left:12px}
+.wtable td:nth-child(3){font-weight:700;color:var(--accent-ink)}
+.wtable tr.skip td{color:var(--muted);text-decoration:line-through}
+.prog{list-style:none;margin:6px 0 0;padding:0;display:grid}
+.prog li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.prog li:first-child{border-top:0}
+.prog li span{min-width:0}
+.prog .up{color:var(--good);font-weight:700;white-space:nowrap}
+.prog .eq{color:var(--muted);font-weight:600;white-space:nowrap}
 
 /* griglia ricette con foto */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -238,6 +297,63 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:99px;font-weight:600;font-size:14px;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+
+/* ---- stile moderno: neutri + accenti arancioni ---- */
+.folder,.wk-day,.ex,.block,.card,.day,.stat,.f-head,.kc-det,.switch{box-shadow:var(--shadow)}
+.folder::before,.f-head::before,.wk-day.today::before{display:none}
+.folder,.wk-day,.ex,.block,.card,.day,.stat,.f-head,.switch{border:1px solid var(--line)}
+.folder{background:var(--soft)!important;padding:12px}
+.folder .ic,.f-head .ic{background:var(--tint);color:var(--orange)}
+.folder .n{color:var(--ink);opacity:1;font-size:20px;right:12px;top:12px}
+.f-sgarro .ic{background:var(--ink);color:var(--orange)}
+.f-head{background:var(--soft)!important}
+.wk-day,.wk-day.today{background:var(--soft)}
+.wk-day.today{border-color:var(--orange)}
+.wk-d{background:var(--bg);color:var(--ink)}
+.wk-day.today .wk-d{background:var(--ink);color:var(--bg)}
+.wk-tag{background:var(--tint);color:var(--accent-ink)}
+.btn.primary{background:var(--ink);color:var(--bg)}
+.btn{background:var(--soft);border:1px solid var(--line)}
+.btn.primary{border-color:var(--ink)}
+.fab{background:var(--orange);transform:none;border-radius:50%;margin-top:-22px}
+.fab:active{transform:scale(.94)}
+.tab.on{color:var(--ink)}
+.tab.on svg{color:var(--orange)}
+.seg button{background:var(--soft);border:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.todaybox,.wkbox{background:var(--hero);color:#fff}
+.todaybox .eyebrow,.wkbox .eyebrow{color:var(--orange);opacity:1}
+.meter{background:rgba(255,255,255,.14)}
+.todaybox .meter i{background:var(--orange)}
+.btn-white{background:var(--orange);color:#fff}
+.strip7 i{background:rgba(255,255,255,.1)}
+.strip7 i.on{background:var(--orange);color:#fff}
+.steps li::before{background:var(--tint);color:var(--accent-ink);transform:none;border-radius:50%}
+.thumb,.photo,.rc .ph,.pick .th{background:var(--tint);color:var(--orange)}
+.block,.stat,.day,.card,.ex{background:var(--soft)}
+input[type=text],input[type=number],textarea{background:var(--soft);border:1px solid var(--line)}
+.ex .ex-nums input{background:var(--bg);border-color:transparent}
+.ex input.ex-name,.f-head input.wk-title{border:0;background:transparent}
+.switch{background:var(--soft)}
+.photo-pick{background:var(--soft);border-color:var(--line);color:var(--muted)}
+.add-ex{border:1.5px dashed var(--line);color:var(--ink);background:transparent}
+.addrow{color:var(--accent-ink)}
+.arch-seg{background:var(--line)}
+.arch-seg button.on{background:var(--soft);color:var(--ink)}
+.kc-wait{background:var(--tint)}
+.kc-empty,.kc-det{background:var(--soft);border:1px solid var(--line)}
+.checks .tick,.ex-chk,.ingrow .dot{border-color:var(--line)}
+.block h3{color:var(--muted)}
+/* esercizi allineati: nome in alto, numeri a tutta larghezza sotto */
+.ex{grid-template-columns:28px 1fr 32px;align-items:center;row-gap:10px;padding:12px 10px 14px 14px}
+.ex-main{display:contents}
+.ex .ex-nums input{-webkit-appearance:none;appearance:textfield;-moz-appearance:textfield;text-align:center}
+.ex .ex-nums input::-webkit-inner-spin-button,.ex .ex-nums input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.ex-chk{grid-column:1;grid-row:1;margin-top:0}
+.ex input.ex-name{grid-column:2;grid-row:1}
+.ex-rm{grid-column:3;grid-row:1}
+.ex-nums{grid-column:1/-1;grid-row:2}
+.ex-main small.ex-last{grid-column:1/-1;grid-row:3}
 @keyframes pop{from{transform:translateY(8px) scale(.97);opacity:.6}to{transform:none;opacity:1}}
 .folder{animation:pop .4s both}
 .folder:nth-child(2){animation-delay:.05s}.folder:nth-child(3){animation-delay:.1s}.folder:nth-child(4){animation-delay:.15s}.folder:nth-child(5){animation-delay:.2s}
@@ -260,6 +376,9 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 
   <div class="sec" style="margin-top:6px"><h3>Le tue cartelle</h3><span id="totCount"></span></div>
   <div class="folders" id="folders"></div>
+
+  <div class="sec" style="margin-top:30px"><h3>Allenamenti</h3><span id="wkCount"></span></div>
+  <div class="wk-days" id="wkDays"></div>
 </div>
 
 <nav class="bar"><div class="in">
@@ -314,13 +433,14 @@ const get=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return nul
 const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
 let P=get(PKEY)||{list:[{id:"p1",name:"Io"}],cur:"p1"};
 let S=loadProfile(P.cur,true);
+S.wk=S.wk||{plan:{},log:{}};
 function loadProfile(id,first){
   const d=get("ricetteSane.data."+id); if(d&&d.recipes) return d;
   if(id==="p1"){const old=get("ricetteSane.v2"); if(old&&old.recipes) return old;}
   if(false){
     const log={};
     [["s1","s2","s3"],["s1","s4","s2","s3"],["s1","s5","s4"]].forEach((ids,i)=>{const d=new Date();d.setDate(d.getDate()-(i+1));log[dk(d)]=ids.map(x=>snap(SAMPLE.find(r=>r.id===x)))});
-    return {recipes:SAMPLE.map(r=>({...r})),target:1500,log};
+    return {recipes:SAMPLE.map(r=>({...r})),target:1500,log,wk:sampleWk()};
   }
   return {recipes:[],target:1500,log:{}};
 }
@@ -359,6 +479,7 @@ function greet(){const h=new Date().getHours();return h<12?"Buongiorno":h<18?"Bu
 function renderHome(){
   const p=me();
   $("#totCount").textContent=S.recipes.length+" ricette";
+  renderWk();
   $("#folders").innerHTML=CATS.map(c=>c.id).concat("sgarro").map(id=>{
     const n=S.recipes.filter(r=>inFolder(r,id)).length;
     return `<button class="folder f-${id}" data-folder="${id}"><span class="ic">${ICONS[id]}</span>
@@ -488,6 +609,7 @@ function resize(file,cb){const rd=new FileReader();rd.onload=()=>{const im=new I
 const colFor=t=>!t?"var(--line)":t<=S.target?"var(--good)":t<=S.target*1.1?"var(--warn)":"var(--bad)";
 function showArchive(){
   setTab("archive"); curFolder=null;
+  if(archTab==="wk") return showArchiveWk();
   const tk=dk(new Date()), eaten=S.log[tk]||[], tot=todayTot(), left=S.target-tot;
   const days=Object.keys(S.log).filter(d=>d!==tk).sort().reverse();
   const allDays=Object.keys(S.log);
@@ -498,6 +620,7 @@ function showArchive(){
   const mx=Math.max(S.target*1.3,...last.map(l=>l.t));
   openPage(`<div class="hdr">${back("p1")}<h2>Archivio</h2>
      <button class="icon-btn" id="openSettings" aria-label="Obiettivo calorico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></button></div>
+    ${archSeg()}
     <section class="todaybox">
       <div class="eyebrow">${new Date().toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})}</div>
       <h3>Cosa hai mangiato oggi?</h3>
@@ -561,12 +684,115 @@ function showProfiles(){
   $("#addProf").addEventListener("click",()=>{const n=$("#newName").value.trim();if(!n){$("#newName").focus();return}save();const id="p"+Date.now();P.list.push({id,name:n});P.cur=id;S=loadProfile(id);save();toast("Profilo di "+n+" creato");$("#p2").hidden=true;closeLayer("p1")});
 }
 
+/* ---------- allenamenti ---------- */
+const DAYS=["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
+const dow=(d=new Date())=>(d.getDay()+6)%7;
+const CHEV='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>';
+const DUMB='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>';
+const XS='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+let archTab="meals";
+const fmtKg=v=>(v===""||v==null)?"":(+v).toLocaleString("it-IT")+" kg";
+const fmtDate=k=>new Date(k+"T12:00").toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"short"});
+const archSeg=()=>`<div class="arch-seg"><button data-arch="meals" class="${archTab==="meals"?"on":""}">Pasti</button><button data-arch="wk" class="${archTab==="wk"?"on":""}">Allenamenti</button></div>`;
+function sampleWk(){
+  let c=0;const mk=(n,s,r,l)=>({id:"e"+(++c),name:n,sets:s,reps:r,load:l});
+  const plan={0:{name:"Gambe e glutei",ex:[mk("Squat",4,"10",40),mk("Hip thrust",4,"12",60),mk("Affondi",3,"10",8)]},
+    2:{name:"Upper body",ex:[mk("Lat machine",4,"10",30),mk("Shoulder press",3,"12",8),mk("Plank",3,"40 sec","")]},
+    4:{name:"Full body",ex:[mk("Stacco rumeno",4,"10",30),mk("Panca piana",3,"10",20)]}};
+  const log={};
+  [[9,0,[37.5,55,6]],[5,2,[27.5,8,""]],[2,0,[40,60,8]]].forEach(([ago,day,loads])=>{const d=new Date();d.setDate(d.getDate()-ago);
+    log[dk(d)]=[{id:"w"+ago,day,name:plan[day].name,time:"18:30",ex:plan[day].ex.map((e,i)=>({name:e.name,sets:e.sets,reps:e.reps,load:loads[i]??"",done:true}))}]});
+  return {plan,log};
+}
+function renderWk(){
+  const t=dow(), doneToday=(S.wk.log[dk(new Date())]||[]).length>0;
+  const active=DAYS.filter((_,i)=>(S.wk.plan[i]?.ex||[]).length).length;
+  $("#wkCount").textContent=active?`${active} giorni a settimana`:"";
+  $("#wkDays").innerHTML=DAYS.map((d,i)=>{const p=S.wk.plan[i]||{ex:[]};const n=p.ex.length;
+    return `<button class="wk-day ${i===t?"today":""} ${n?"":"rest"}" data-day="${i}">
+      <span class="wk-d">${d.slice(0,3)}</span>
+      <span class="wk-info"><b>${n?esc(p.name||"Allenamento"):"Riposo"}</b><small>${n?`${n} esercizi${i===t?" · oggi":""}`:(i===t?"Oggi · tocca per aggiungere":"Tocca per aggiungere esercizi")}</small></span>
+      ${i===t&&n?`<span class="wk-tag ${doneToday?"ok":""}">${doneToday?"Fatto":"Oggi"}</span>`:"<span></span>"}${CHEV}</button>`}).join("");
+}
+function lastLoad(name){
+  const n=name.trim().toLowerCase(); if(!n) return "";
+  for(const d of Object.keys(S.wk.log).sort().reverse()) for(const s of S.wk.log[d]) for(const e of s.ex)
+    if(e.name.trim().toLowerCase()===n&&e.load!==""&&e.load!=null) return `Ultima volta: ${fmtKg(e.load)} · ${new Date(d+"T12:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"})}`;
+  return "";
+}
+function showDay(i){
+  setTab("home"); curFolder=null;
+  const p=S.wk.plan[i]||(S.wk.plan[i]={name:"",ex:[]});
+  const exRow=e=>{const last=lastLoad(e.name);return `<div class="ex ${e.done?"done":""}" data-ex="${e.id}">
+    <button type="button" class="ex-chk" data-exdone aria-label="Segna come fatto">${TICK}</button>
+    <div class="ex-main">
+      <input type="text" class="ex-name" data-f="name" value="${esc(e.name)}" placeholder="Nome esercizio">
+      <div class="ex-nums">
+        <label>Set<input type="number" inputmode="numeric" data-f="sets" value="${e.sets??""}" placeholder="–"></label>
+        <label>Rep<input type="text" inputmode="numeric" data-f="reps" value="${esc(e.reps??"")}" placeholder="–"></label>
+        <label>Kg<input type="number" inputmode="decimal" step="0.5" data-f="load" value="${e.load??""}" placeholder="—"></label>
+      </div>
+      ${last?`<small class="ex-last">${last}</small>`:""}
+    </div>
+    <button type="button" class="ex-rm" data-exrm aria-label="Elimina esercizio">${XS}</button></div>`};
+  openPage(`<div class="hdr">${back("p1")}<h2>${DAYS[i]}</h2></div>
+    <div class="f-head" style="background:var(--t1)"><span class="ic">${DUMB}</span><div>
+      <input type="text" class="wk-title" id="wkName" value="${esc(p.name)}" placeholder="Nome (es. Gambe)">
+      <p>${DAYS[i]}${i===dow()?" · oggi":""} · <span id="exN">${p.ex.length}</span> esercizi</p></div></div>
+    <div class="exlist" id="exList">${p.ex.map(exRow).join("")||""}</div>
+    <button class="add-ex" id="addEx">+ Aggiungi esercizio</button>
+    <div class="actions"><button class="btn primary wide" id="saveWk">Salva nell'archivio di oggi</button></div>
+    <p class="hint-s">Spunta gli esercizi che hai fatto e aggiorna i kg. Nell'archivio finiscono con la data di oggi.</p>`,"p1");
+  const find=el=>p.ex.find(x=>x.id===el.closest("[data-ex]")?.dataset.ex);
+  $("#wkName").addEventListener("input",e=>{p.name=e.target.value;save()});
+  $("#exList").addEventListener("input",e=>{const ex=find(e.target),f=e.target.dataset.f;if(!ex||!f)return;
+    const v=e.target.value; ex[f]=f==="sets"?(v===""?"":+v):f==="load"?(v===""?"":+v):v; save()});
+  $("#exList").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const ex=find(b);if(!ex)return;
+    if("exdone" in b.dataset){ex.done=!ex.done;b.closest(".ex").classList.toggle("done",ex.done);save()}
+    else if("exrm" in b.dataset){p.ex=p.ex.filter(x=>x!==ex);b.closest(".ex").remove();$("#exN").textContent=p.ex.length;save();toast("Esercizio eliminato")}});
+  $("#addEx").addEventListener("click",()=>{const ex={id:"e"+Date.now(),name:"",sets:"",reps:"",load:""};p.ex.push(ex);
+    $("#exList").insertAdjacentHTML("beforeend",exRow(ex));$("#exN").textContent=p.ex.length;
+    const all=$("#exList").querySelectorAll(".ex-name");all[all.length-1].focus();save()});
+  $("#saveWk").addEventListener("click",()=>{
+    const ex=p.ex.filter(e=>e.name.trim()); if(!ex.length){toast("Aggiungi almeno un esercizio");return}
+    const k=dk(new Date()), now=new Date();
+    const entry={id:"w"+Date.now(),day:i,name:p.name.trim()||DAYS[i],time:now.toTimeString().slice(0,5),
+      ex:ex.map(e=>({name:e.name.trim(),sets:e.sets,reps:e.reps,load:e.load,done:!!e.done}))};
+    S.wk.log[k]=(S.wk.log[k]||[]).filter(s=>s.day!==i).concat(entry);
+    p.ex.forEach(e=>e.done=false); save(); toast("Allenamento salvato nell'archivio");
+    archTab="wk"; showArchive();
+  });
+}
+function showArchiveWk(){
+  const days=Object.keys(S.wk.log).filter(d=>S.wk.log[d].length).sort().reverse();
+  const sessions=days.reduce((a,d)=>a+S.wk.log[d].length,0);
+  const now=new Date(), mKey=dk(now).slice(0,7);
+  const month=days.filter(d=>d.startsWith(mKey)).length;
+  const strip=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);strip.push({lab:d.toLocaleDateString("it-IT",{weekday:"short"}).slice(0,2),on:(S.wk.log[dk(d)]||[]).length>0})}
+  const week=strip.filter(s=>s.on).length;
+  const hist={};days.slice().reverse().forEach(d=>S.wk.log[d].forEach(s=>s.ex.forEach(e=>{if(e.load===""||e.load==null)return;const k=e.name.trim().toLowerCase();(hist[k]=hist[k]||{name:e.name.trim(),v:[]}).v.push(+e.load)})));
+  const prog=Object.values(hist).filter(h=>h.v.length>1).slice(0,10);
+  openPage(`<div class="hdr">${back("p1")}<h2>Archivio</h2></div>
+    ${archSeg()}
+    <section class="wkbox"><div class="eyebrow">Ultimi 7 giorni</div><h3>${week?`${week} allenament${week===1?"o":"i"} questa settimana`:"Nessun allenamento negli ultimi 7 giorni"}</h3>
+      <div class="strip7">${strip.map(s=>`<div><i class="${s.on?"on":""}">${s.on?TICK.replace('stroke="#fff"','stroke="currentColor"'):""}</i>${s.lab}</div>`).join("")}</div></section>
+    <div class="stats"><div class="stat"><b class="num">${sessions}</b><span>allenamenti totali</span></div><div class="stat"><b class="num">${month}</b><span>questo mese</span></div><div class="stat"><b class="num">${week}</b><span>in 7 giorni</span></div></div>
+    ${prog.length?`<div class="block" style="margin-top:0"><h3>Progressi dei carichi</h3><ul class="prog">${prog.map(h=>{const a=h.v[0],b=h.v[h.v.length-1],d=b-a;return `<li><span>${esc(h.name)}</span><span class="${d>0?"up":"eq"}">${fmtKg(a)} → ${fmtKg(b)}${d>0?` (+${d.toLocaleString("it-IT")})`:""}</span></li>`}).join("")}</ul></div>`:""}
+    <div class="sec"><h3>Giorno per giorno</h3></div>
+    <div class="list">${days.length?days.map(d=>S.wk.log[d].map(s=>`<div class="day"><div class="dh"><b>${fmtDate(d)}</b><span class="badge b-good">${esc(s.name)}</span></div>
+      <table class="wtable"><tbody>${s.ex.map(e=>`<tr class="${e.done===false?"skip":""}"><td>${esc(e.name)}</td><td>${e.sets?e.sets+" × ":""}${esc(e.reps||"")}</td><td>${fmtKg(e.load)}</td></tr>`).join("")}</tbody></table>
+      <div class="dh" style="color:var(--muted);font-size:13px"><span>${s.ex.filter(e=>e.done!==false).length} / ${s.ex.length} esercizi fatti</span><span>ore ${s.time||""}</span></div></div>`).join("")).join("")
+      :`<div class="empty">Ancora nessun allenamento salvato.<br>Apri un giorno dalla Home, spunta gli esercizi e tocca "Salva nell'archivio di oggi".</div>`}</div>`,"p1");
+}
+
 function setTab(n){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.go===n))}
 
 document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;
   const d=t.dataset;
   if(d.folder)showFolder(d.folder);
+  else if(d.day!==undefined)showDay(+d.day);
+  else if(d.arch){archTab=d.arch;showArchive()}
   else if(d.open)showRecipe(d.open);
   else if(d.edit)showEditor(d.edit);
   else if(d.close)closeLayer(d.close);
