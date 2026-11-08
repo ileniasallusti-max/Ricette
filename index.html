@@ -350,7 +350,9 @@ input[type=text],input[type=number],textarea{background:var(--soft);border:1px s
 .ex .ex-nums input{-webkit-appearance:none;appearance:textfield;-moz-appearance:textfield;text-align:center}
 .ex .ex-nums input::-webkit-inner-spin-button,.ex .ex-nums input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .ex-chk{grid-column:1;grid-row:1;margin-top:0}
-.ex input.ex-name{grid-column:2;grid-row:1}
+.ex .ex-name{grid-column:2;grid-row:1;font:inherit;font-weight:700;font-size:16px;line-height:1.3;border:0;background:transparent;color:var(--ink);padding:4px 0;width:100%;min-height:0;resize:none;overflow:hidden;border-radius:0}
+.ex.done .ex-name{text-decoration:line-through;color:var(--muted)}
+.ex-nums{grid-template-columns:1fr 1.7fr 1fr}
 .ex-rm{grid-column:3;grid-row:1}
 .ex-nums{grid-column:1/-1;grid-row:2}
 .ex-main small.ex-last{grid-column:1/-1;grid-row:3}
@@ -576,6 +578,7 @@ function showEditor(id){
   }
   const schedule=()=>{if(draft.kcalManual)return;err="";clearTimeout(timer);upd();timer=setTimeout(()=>{if(sig()!==draft.kcalSig)calc()},1500)};
   upd();
+  if(!draft.kcalManual&&curIngs().length&&draft.kcalSig!==sig()) schedule();
   $("#ingRows").addEventListener("input",schedule);
   $("#fServ").addEventListener("input",upd);
   $("#kcalArea").addEventListener("click",e=>{const id=e.target.id;
@@ -739,7 +742,7 @@ function showDay(i){
   const exRow=e=>{const last=lastLoad(e.name);return `<div class="ex ${e.done?"done":""}" data-ex="${e.id}">
     <button type="button" class="ex-chk" data-exdone aria-label="Segna come fatto">${TICK}</button>
     <div class="ex-main">
-      <input type="text" class="ex-name" data-f="name" value="${esc(e.name)}" placeholder="Nome esercizio">
+      <textarea class="ex-name" data-f="name" rows="1" placeholder="Nome esercizio">${esc(e.name)}</textarea>
       <div class="ex-nums">
         <label>Set<input type="number" inputmode="numeric" data-f="sets" value="${e.sets??""}" placeholder="–"></label>
         <label>Rep<input type="text" inputmode="numeric" data-f="reps" value="${esc(e.reps??"")}" placeholder="–"></label>
@@ -757,8 +760,11 @@ function showDay(i){
     <div class="actions"><button class="btn primary wide" id="saveWk">Salva nell'archivio di oggi</button></div>
     <p class="hint-s">Spunta gli esercizi che hai fatto e aggiorna i kg. Nell'archivio finiscono con la data di oggi.</p>`,"p1");
   const find=el=>p.ex.find(x=>x.id===el.closest("[data-ex]")?.dataset.ex);
+  const fit=t=>{t.style.height="auto";t.style.height=t.scrollHeight+"px"};
+  document.querySelectorAll("#exList .ex-name").forEach(fit);
+  $("#exList").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList.contains("ex-name")){e.preventDefault();e.target.blur()}});
   $("#wkName").addEventListener("input",e=>{p.name=e.target.value;save()});
-  $("#exList").addEventListener("input",e=>{const ex=find(e.target),f=e.target.dataset.f;if(!ex||!f)return;
+  $("#exList").addEventListener("input",e=>{const ex=find(e.target),f=e.target.dataset.f;if(!ex||!f)return;if(f==="name")fit(e.target);
     const v=e.target.value; ex[f]=f==="sets"?(v===""?"":+v):f==="load"?(v===""?"":+v):v; save()});
   $("#exList").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const ex=find(b);if(!ex)return;
     if("exdone" in b.dataset){ex.done=!ex.done;b.closest(".ex").classList.toggle("done",ex.done);save()}
@@ -816,8 +822,24 @@ document.addEventListener("click",e=>{
   else if(t.id==="addBtn")showEditor();
   else if(t.id==="whoBtn")showProfiles();
 });
+/* calcola in sottofondo le kcal delle ricette che non le hanno ancora */
+async function autoKcal(){
+  const todo=S.recipes.filter(r=>!r.kcal&&!r.kcalManual&&(r.ingredients||[]).length).map(r=>r.id);
+  for(const id of todo){
+    const r=S.recipes.find(x=>x.id===id); if(!r||r.kcal) continue;
+    try{
+      const res=await fetch("/.netlify/functions/kcal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:r.title,ingredients:r.ingredients})});
+      const j=await res.json().catch(()=>({})); if(!res.ok||!Array.isArray(j.items)) return;
+      const cur=S.recipes.find(x=>x.id===id); if(!cur||cur.kcal) continue;
+      cur.kcalDetail=j.items;cur.kcalTotal=j.total;cur.kcalSig=JSON.stringify(cur.ingredients);cur.kcal=Math.round(j.total/(cur.servings||1));
+      save(); if($("#p1").hidden&&$("#p2").hidden) renderHome();
+    }catch(e){return}
+    await new Promise(ok=>setTimeout(ok,2500));
+  }
+}
 save();
 renderHome();
+setTimeout(autoKcal,1500);
 </script>
 
 </body>
